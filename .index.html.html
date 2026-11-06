@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Leveling — The Awakening System by Aman</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Rajdhani:wght@500;600&display=swap">
+<style>
+:root{color-scheme:dark;--bg:#07060d;--panel:#0f1226;--panel2:#161a38;--line:#2a2f66;--vio:#8b5cf6;--cy:#22d3ee;--tx:#e8eaff;--mut:#9aa0cf;--ok:#34d399;--bad:#f87171;--r:12px;--hd:'Cinzel',Georgia,serif;--ui:'Rajdhani',system-ui,sans-serif;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -10%,#1b1450,var(--bg) 60%) fixed;color:var(--tx);font:500 17px/1.45 var(--ui);min-height:100vh;overflow-x:hidden}
+main{max-width:760px;margin:0 auto;padding:16px 14px 96px}
+h1,h2,h3{font-family:var(--hd);margin:.2em 0 .5em;letter-spacing:.02em}h1{font-size:1.6rem}h2{font-size:1.25rem}h3{font-size:1.05rem}
+.p{background:linear-gradient(160deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:var(--r);padding:14px;margin:0 0 12px;box-shadow:0 0 22px #8b5cf622}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.sp{justify-content:space-between}.mut{color:var(--mut);font-size:.92rem}
+button,select,input{font:inherit;color:var(--tx);background:#0b0d20;border:1px solid var(--line);border-radius:10px;padding:10px 14px;min-height:44px}
+button{cursor:pointer;background:linear-gradient(135deg,#5b3bd1,#2b7fd1);border:0;font-weight:600}button.g{background:#0b0d20;border:1px solid var(--line)}button:disabled{opacity:.45;cursor:not-allowed}
+:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
+label{display:block;margin:10px 0 4px}.chk{display:inline-flex;gap:6px;align-items:center;margin:4px 12px 4px 0}.chk input{min-height:0}
+.bar{height:10px;background:#0b0d20;border-radius:9px;overflow:hidden;border:1px solid var(--line)}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--vio),var(--cy));transition:width .4s}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:#090a18ee;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);backdrop-filter:blur(8px);z-index:5}
+nav button{flex:1;background:none;border-radius:0;padding:12px 2px;color:var(--mut);font-size:.95rem}nav button[aria-current=page]{color:var(--cy);box-shadow:inset 0 2px var(--cy)}
+.tag{font-size:.8rem;border:1px solid var(--line);border-radius:20px;padding:1px 9px;color:var(--mut)}
+.emb{width:112px;height:112px;flex:none}.ring{transform-origin:60px 60px;animation:sp 14s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+#dlg{position:fixed;inset:0;background:#000b;display:none;align-items:center;justify-content:center;z-index:9;padding:20px}#dlg.on{display:flex}
+#toast{position:fixed;left:12px;right:12px;bottom:calc(76px + env(safe-area-inset-bottom,0px));background:#14183a;border:1px solid var(--cy);border-radius:10px;padding:10px 14px;display:none;z-index:8}
+.big{font-family:var(--hd);font-size:2.4rem;color:var(--cy)}.err{color:var(--bad)}.ok{color:var(--ok)}ul{padding-left:20px}
+</style></head><body>
+<main id="app"></main><nav id="nav" aria-label="Main"></nav><div id="toast" role="status"></div><div id="dlg" role="dialog" aria-modal="true"></div>
+<script>
+"use strict";
+const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const K='sov.v1',AGES={u13:'Under 13','13-15':'13–15','16-17':'16–17','18+':'18+'},DN=['','Beginner','Foundation','Intermediate','Advanced','Challenge'];
+/* name|pattern|equipment|level|adultOnly|cue */
+const D=`Wall Push-Up|push|none|1||Hands on the wall, body in one line, bend elbows slowly.
+Incline Push-Up|push|none|2||Hands on a sturdy bench or counter; keep ribs down.
+Push-Up|push|none|3||Body in one line; stop the set when form slips.
+Pike Push-Up|push|none|4||Hips high, lower the head between the hands.
+Archer Push-Up|push|none|5|A|Shift weight side to side; needs a coach’s check first.
+Dumbbell Floor Press|push|dumbbell|2||Elbows about 45° from the body, press smoothly.
+Dumbbell Overhead Press|push|dumbbell|3||Light weight, squeeze glutes, no back arching.
+Band Chest Press|push|band|2||Anchor the band behind you; press without shrugging.
+Band Pull-Apart|pull|band|1||Straight arms, pull the band to chest height.
+Band Row|pull|band|1||Sit tall, pull elbows back, pause one second.
+Dumbbell Bent-Over Row|pull|dumbbell|2||Flat back, pull to the hip, control the lowering.
+Single-Arm Dumbbell Row|pull|dumbbell|2||Support with the free hand; keep the hips square.
+Inverted Row|pull|bar|3||Under a sturdy bar or table rated for your weight.
+Chin-Up Negative|pull|bar|3||Step up, lower for 3–5 seconds, step down.
+Pull-Up|pull|bar|4||Full hang to chin over bar; stop before form breaks.
+Bodyweight Squat|squat|none|1||Feet shoulder-width, knees track over toes.
+Box Squat|squat|none|1||Sit back to a chair and stand without using hands.
+Goblet Squat|squat|dumbbell|2||Hold the weight at the chest, keep the torso tall.
+Split Squat|squat|none|2||Long stance, drop the back knee straight down.
+Reverse Lunge|squat|none|3||Step back softly, front shin stays near vertical.
+Bulgarian Split Squat|squat|dumbbell|4||Rear foot on a low bench; move slowly.
+Hip Hinge Drill|hinge|none|1||Hands on hips, push the hips back, flat spine.
+Glute Bridge|hinge|none|1||Press through heels, ribs down, squeeze at the top.
+Single-Leg Glute Bridge|hinge|none|2||Keep the pelvis level.
+Band Good Morning|hinge|band|2||Stand on the band, hinge to mid-shin height.
+Romanian Deadlift (Dumbbell)|hinge|dumbbell|3||Soft knees, weights slide along the legs.
+Dead Bug|core|none|1||Low back stays flat while opposite limbs extend.
+Bird Dog|core|none|1||Reach long, hips level, no twisting.
+Plank|core|none|2||Hold a straight line; stop when the hips sag.
+Side Plank|core|none|3||Stack the feet, lift the hips, breathe steadily.
+Hollow Hold|core|none|4||Low back pressed down; bend the knees to make it easier.
+Hanging Knee Raise|core|bar|4||Lift slowly, no swinging.
+Cat-Cow|mobility|none|1||Move the spine one segment at a time with the breath.
+Thoracic Rotation|mobility|none|1||Hand behind the head, rotate the upper back only.
+Ankle Rocks|mobility|none|1||Knee glides over the toes, heel stays down.
+Shoulder Circles (CARs)|mobility|none|2||Slow, largest pain-free circle.
+90/90 Hip Switches|mobility|none|2||Sit tall, rotate the legs side to side.
+World’s Greatest Stretch|mobility|none|2||Lunge, elbow to instep, rotate the chest open.
+Hamstring Stretch|flex|none|1||Gentle tension only; never bounce.
+Hip Flexor Stretch|flex|none|1||Tuck the pelvis, lean forward slightly.
+Child’s Pose|flex|none|1||Sink the hips back and breathe slowly.
+Doorway Chest Stretch|flex|none|1||Forearm on the frame, turn away gently.
+Single-Leg Stand|balance|none|1||Near a wall for support; eyes on a fixed point.
+Tandem Walk|balance|none|1||Heel to toe along a line.
+Single-Leg Reach|balance|none|3||Hinge on one leg, reach to the floor, return.
+Marching in Place|cardio|none|1||Lift the knees, swing the arms, steady breathing.
+Brisk Walk Intervals|cardio|none|1||Alternate fast and easy walking.
+Jumping Jacks|cardio|none|2||Land softly on the balls of the feet.
+Step-Ups|cardio|none|2||Whole foot on a stable step, control the way down.
+Shadow Footwork (non-contact)|cardio|none|2||Light, balanced steps; no contact or partner drills.
+Skipping Rope|cardio|rope|3||Small hops, relaxed wrists.
+Box Jump|cardio|box|4|A|Step down, never jump down; low box, adults only.`.split('\n').map((l,i)=>{const[n,p,q,v,a,c]=l.split('|');return{id:'EX'+String(i+1).padStart(3,'0'),n,p,q,v:+v,a:a==='A',c,t:/Plank|Hold|Stretch|Stand|Pose|Walk|Marching|Jacks|Footwork|Rope|Rocks|Cat|Circles|Switches|World|Rotation|Bird/.test(n)}});
+const byId=Object.fromEntries(D.map(e=>[e.id,e]));
+let S=load(),view='status',sess=null,tm=null,filt={q:'',p:'',e:''};
+const today=()=>new Date().toISOString().slice(0,10);
+function valid(o){try{return o&&o.v===1&&typeof o.name==='string'&&o.name.length>0&&o.name.length<=30&&AGES[o.age]&&[1,2,3,4,5].includes(o.diff)&&Array.isArray(o.eq)&&Array.isArray(o.log)&&o.log.length<5000&&Array.isArray(o.claims)&&Number.isFinite(o.bonus)&&Array.isArray(o.favs)&&new Set(o.log.map(l=>l.sid)).size===o.log.length&&o.log.every(l=>typeof l.sid==='string'&&/^\d{4}-\d\d-\d\d$/.test(l.date)&&Number.isFinite(l.xp)&&l.xp>=0&&l.xp<=300&&Array.isArray(l.sets)&&l.sets.length<=60&&l.sets.every(s=>byId[s.ex]&&Number.isFinite(s.val)&&s.val>=0&&s.val<=3600))}catch(e){return false}}
+function load(){try{const r=localStorage.getItem(K);if(!r)return null;const o=JSON.parse(r);if(valid(o))return o;localStorage.setItem(K+'.corrupt',r);toast('Saved data was unreadable. A copy was kept aside and you can start fresh.');return null}catch(e){return null}}
+function save(){try{localStorage.setItem(K,JSON.stringify(S))}catch(e){toast('Storage is unavailable. Export a backup in Data so progress is not lost.')}}
+function saveSess(){try{sess?localStorage.setItem(K+'.sess',JSON.stringify(sess)):localStorage.removeItem(K+'.sess')}catch(e){}}
+try{const r=localStorage.getItem(K+'.sess');if(r&&S){const o=JSON.parse(r);if(o&&Array.isArray(o.steps)&&o.steps.every(s=>byId[s.ex]))sess=o}}catch(e){}
+function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(toast.h);toast.h=setTimeout(()=>t.style.display='none',4200)}
+function ask(msg,yes,label='Confirm'){const d=$('#dlg');d.innerHTML=`<div class="p" style="max-width:380px"><p>${esc(msg)}</p><div class="row"><button id="y">${esc(label)}</button><button class="g" id="n">Cancel</button></div></div>`;d.classList.add('on');$('#n').focus();$('#n').onclick=()=>d.classList.remove('on');$('#y').onclick=()=>{d.classList.remove('on');yes()}}
+/* progression */
+const totalXp=()=>S.log.reduce((a,l)=>a+l.xp,0)+S.bonus;
+function lvl(){let x=totalXp(),l=1;while(x>=100*l){x-=100*l;l++}return{l,x,need:100*l}}
+function rank(l){const R=[[5,'F','#9aa0cf'],[10,'E','#34d399'],[15,'D','#22d3ee'],[20,'C','#60a5fa'],[30,'B','#a78bfa'],[40,'A','#f472b6'],[50,'S','#fbbf24'],[70,'SS','#fb923c']];for(const r of R)if(l<r[0])return{n:r[1],c:r[2]};return{n:'Σ',c:'#f8fafc'}}
+function caps(){const a={u13:2,'13-15':3,'16-17':3,'18+':5}[S.age],x={new:2,some:3,regular:5}[S.exp];return{cap:Math.min(a,x),a,x}}
+function attrs(){const A={Strength:0,Endurance:0,Mobility:0,Flexibility:0,Coordination:0,Balance:0,Stability:0};const M={push:'Strength',pull:'Strength',squat:'Strength',hinge:'Strength',cardio:'Endurance',mobility:'Mobility',flex:'Flexibility',balance:'Balance',core:'Stability'};S.log.forEach(l=>l.sets.forEach(s=>{const e=byId[s.ex];A[M[e.p]]++;if(e.p==='balance'||e.p==='cardio')A.Coordination+=.5}));return Object.entries(A).map(([k,v])=>[k,Math.min(100,Math.round(v*2))])}
+const weekDays=()=>{const d=new Date();d.setDate(d.getDate()-6);const f=d.toISOString().slice(0,10);return new Set(S.log.filter(l=>l.date>=f).map(l=>l.date)).size};
+function quests(){const t=today(),L=S.log.filter(l=>l.date===t),n=L.length,sets=L.reduce((a,l)=>a+l.sets.length,0),rec=L.reduce((a,l)=>a+l.sets.filter(s=>['mobility','flex'].includes(byId[s.ex].p)).length,0);
+return[{id:'d-session',t:'Daily',n:'Complete one session',p:n,g:1,xp:50},{id:'d-sets',t:'Daily',n:'Record 10 sets',p:sets,g:10,xp:40},{id:'d-rec',t:'Recovery',n:'Record 3 mobility or stretch sets',p:rec,g:3,xp:40},{id:'w-days',t:'Weekly',n:'Train on 3 different days this week',p:weekDays(),g:3,xp:120,wk:1}].map(q=>({...q,key:q.id+':'+(q.wk?new Date(Date.now()-new Date().getDay()*864e5).toISOString().slice(0,10):t)}))}
+/* generator */
+const sh=a=>a.map(x=>[Math.random(),x]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
+const okEx=(e,lv)=>e.v<=lv&&(!e.a||(S.age==='18+'&&lv>=4))&&(e.q==='none'||S.eq.includes(e.q));
+function step(e,role,lv){const timed=e.t,u=S.age!=='18+'||lv<=2?0:1,sets=role==='main'?Math.min([2,2,3,3,4][lv-1],S.age==='18+'?4:3):1;
+return{ex:e.id,role,sets,target:timed?(role==='main'?25+5*lv:role==='warm'?30:40):(lv<=2?10:8),unit:timed?'sec':'reps',rest:role==='main'?45+15*lv:15,why:role==='main'?`Covers the ${e.p} pattern at level ${e.v}, within your cap of ${lv}.`:role==='warm'?'Prepares joints and tissues for the main work.':'Eases down and restores range of motion.',recs:[]}}
+function gen(){const lv=S.diff,pick=(p,n,used)=>sh(D.filter(e=>e.p===p&&okEx(e,lv)&&!used.has(e.id)&&e.v>=Math.max(1,lv-2))).slice(0,n);const used=new Set(),out=[];
+pick('mobility',2,used).forEach(e=>{used.add(e.id);out.push(step(e,'warm',lv))});
+const n=Math.max(3,Math.min(6,Math.floor((S.mins-12)/7)));
+['squat','push','pull','hinge','core','balance'].slice(0,n).forEach(p=>pick(p,1,used).forEach(e=>{used.add(e.id);out.push(step(e,'main',lv))}));
+pick('flex',2,used).forEach(e=>{used.add(e.id);out.push(step(e,'cool',lv))});S.plan=out;save()}
+/* session */
+function startSess(){if(!S.plan||!S.plan.length)return toast('Generate a plan first.');sess={sid:'S'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),start:Date.now(),paused:0,pausedAt:0,rest:0,i:0,steps:JSON.parse(JSON.stringify(S.plan)),notes:''};saveSess();view='train';render()}
+const el=()=>(sess.pausedAt||Date.now())-sess.start-sess.paused;
+const fmt=ms=>{const s=Math.max(0,Math.floor(ms/1000));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
+function recSet(){if(sess.pausedAt)return;const st=sess.steps[sess.i],v=+$('#val').value;if(!Number.isFinite(v)||v<=0||v>3600)return toast('Enter a number from 1 to 3600.');if(st.recs.length>=st.sets)return;st.recs.push(v);sess.rest=Date.now()+st.rest*1000;if(st.recs.length>=st.sets)sess.i=Math.min(sess.i+1,sess.steps.length-1);saveSess();render()}
+function finish(){if(!sess)return;const sid=sess.sid;if(S.log.some(l=>l.sid===sid)){sess=null;saveSess();view='status';return render()}
+const sets=[];sess.steps.forEach(s=>s.recs.forEach(v=>sets.push({ex:s.ex,val:v})));if(!sets.length)return toast('Record at least one set to complete a session.');
+const used=S.log.filter(l=>l.date===today()).reduce((a,l)=>a+l.xp,0),xp=Math.max(0,Math.min(sets.length*10,300-used));
+S.log.push({sid,date:today(),dur:Math.round(el()/1000),sets,xp});sess=null;saveSess();save();view='status';toast(xp?`Session logged. +${xp} XP.`:'Session logged. Daily XP cap reached, rest well.');render()}
+/* views */
+function emblem(){const r=rank(lvl().l);return`<svg class="emb" viewBox="0 0 120 120" role="img" aria-label="Rank ${r.n}"><defs><filter id="gl"><feGaussianBlur stdDeviation="2.5"/></filter></defs><g class="ring"><circle cx="60" cy="60" r="52" fill="none" stroke="${r.c}" stroke-width="3" stroke-dasharray="18 8" filter="url(#gl)"/><circle cx="60" cy="60" r="52" fill="none" stroke="${r.c}" stroke-width="2" stroke-dasharray="18 8"/></g><polygon points="60,16 98,38 98,82 60,104 22,82 22,38" fill="#0b0d20" stroke="${r.c}" stroke-width="2"/><text x="60" y="73" text-anchor="middle" font-family="Cinzel,serif" font-weight="800" font-size="${r.n.length>1?30:40}" fill="${r.c}">${r.n}</text></svg>`}
+function vStatus(){const L=lvl(),r=rank(L.l);return`<div class="p"><div class="row">${emblem()}<div style="flex:1;min-width:180px"><h1>${esc(S.name)}</h1><div class="mut">Rank ${r.n} · Level ${L.l}</div><div class="bar" role="progressbar" aria-valuenow="${L.x}" aria-valuemax="${L.need}"><i style="width:${L.x/L.need*100}%"></i></div><div class="mut">${L.x} / ${L.need} XP · ${totalXp()} total</div></div></div></div>
+<div class="p"><h2>Status</h2><div class="row sp"><span>Sessions completed</span><b>${S.log.length}</b></div><div class="row sp"><span>Training days, last 7</span><b>${weekDays()} of ${S.days}</b></div><div class="row sp"><span>Difficulty</span><b>${DN[S.diff]}</b></div></div>
+<div class="p"><h2>Attributes</h2><p class="mut">Estimated from your recorded sets. These are game values, not measurements of health or fitness, and nothing here is coach-verified.</p>${attrs().map(([k,v])=>`<div class="row sp"><span>${k}</span><span class="mut">${v}</span></div><div class="bar"><i style="width:${v}%"></i></div>`).join('')}</div>
+<div class="p"><h2>Rest is progress</h2><p class="mut">Recovery quests earn XP. Skipping a day never costs you anything.</p></div>`}
+function vLib(){const r=D.filter(e=>(!filt.q||e.n.toLowerCase().includes(filt.q.toLowerCase()))&&(!filt.p||e.p===filt.p)&&(!filt.e||e.q===filt.e));const P=[...new Set(D.map(e=>e.p))],Q=[...new Set(D.map(e=>e.q))];
+return`<h1>Exercise library</h1><div class="p"><input id="q" type="search" placeholder="Search exercises" aria-label="Search exercises" value="${esc(filt.q)}" style="width:100%"><div class="row" style="margin-top:8px"><select id="fp" aria-label="Movement pattern"><option value="">All patterns</option>${P.map(x=>`<option ${filt.p===x?'selected':''}>${x}</option>`).join('')}</select><select id="fe" aria-label="Equipment"><option value="">All equipment</option>${Q.map(x=>`<option ${filt.e===x?'selected':''}>${x}</option>`).join('')}</select></div></div><div class="mut" style="margin-bottom:8px">${r.length} of ${D.length} shown</div>
+${r.length?r.map(e=>{const ok=okEx(e,S.diff);return`<div class="p"><div class="row sp"><h3 style="margin:0">${esc(e.n)}</h3><button class="g" data-fav="${e.id}" aria-label="Favourite ${esc(e.n)}">${S.favs.includes(e.id)?'★':'☆'}</button></div><div class="row"><span class="tag">${e.p}</span><span class="tag">${e.q}</span><span class="tag">${DN[e.v]}</span>${e.a?'<span class="tag err">adults, supervised</span>':''}</div><p>${esc(e.c)}</p>${ok?'':'<p class="mut">Locked for you right now: your level, age, or equipment does not match.</p>'}</div>`}).join(''):'<div class="p">No exercises match. Clear a filter to see more.</div>'}`}
+function vTrain(){if(sess){const st=sess.steps[sess.i],e=byId[st.ex],done=st.recs.length>=st.sets,rest=sess.rest-Date.now();
+return`<h1>Session</h1><div class="p"><div class="row sp"><span>Time <b id="clk">${fmt(el())}</b></span><button class="g" id="pz">${sess.pausedAt?'Resume':'Pause'}</button></div></div>
+<div class="p"><div class="mut">Exercise ${sess.i+1} of ${sess.steps.length} · ${st.role}</div><h2>${esc(e.n)}</h2><p>${esc(e.c)}</p><p class="mut">${esc(st.why)}</p><p>Set ${Math.min(st.recs.length+1,st.sets)} of ${st.sets} · target ${st.target} ${st.unit}</p>
+<div class="row"><input id="val" type="number" inputmode="numeric" min="1" max="3600" value="${st.target}" aria-label="Completed ${st.unit}" style="width:100px"><button id="rec" ${sess.pausedAt||done?'disabled':''}>Record set</button><button class="g" id="skip">Skip exercise</button></div>
+<div id="rst" class="mut" style="margin-top:8px">${rest>0?'Rest '+fmt(rest):'Ready'}</div><p class="mut">Stop any set that hurts. Pain is a reason to stop, not to push.</p></div>
+<div class="p"><label for="nt">Session notes</label><input id="nt" maxlength="200" value="${esc(sess.notes)}" style="width:100%"></div>
+<div class="row"><button id="fin">Finish session</button><button class="g" id="ab">Abandon</button></div>`}
+const c=caps();
+return`<h1>Train</h1><div class="p"><label for="df">Difficulty</label><select id="df">${[1,2,3,4,5].map(i=>`<option value="${i}" ${S.diff===i?'selected':''} ${i>c.cap?'disabled':''}>${DN[i]}${i>c.cap?' (locked)':''}</option>`).join('')}</select><p class="mut">Your highest level is ${DN[c.cap]}. ${c.a<c.x?'Your age range sets this limit.':c.x<c.a?'Your training experience sets this limit.':'Both age and experience set this limit.'} Higher difficulty means harder technique, never more reps through pain.</p><button id="gen">Generate workout</button></div>
+${S.plan&&S.plan.length?`<div class="p"><h2>Preview</h2>${S.plan.map((s,i)=>`<div class="row sp" style="margin-bottom:8px"><div><b>${esc(byId[s.ex].n)}</b><div class="mut">${s.role} · ${s.sets}×${s.target} ${s.unit} · rest ${s.rest}s</div><div class="mut">${esc(s.why)}</div></div><button class="g" data-sw="${i}">Swap</button></div>`).join('')}<button id="go">Start session</button></div>`:'<div class="p">No plan yet. Generate a workout to preview it before you start.</div>'}`}
+function vQuests(){return`<h1>Quests</h1>${quests().map(q=>{const d=q.p>=q.g,c=S.claims.includes(q.key);return`<div class="p"><div class="row sp"><div><span class="tag">${q.t}</span><h3 style="margin:6px 0">${q.n}</h3><div class="mut">${Math.min(q.p,q.g)} / ${q.g} · +${q.xp} XP</div></div><button data-cl="${q.key}" data-xp="${q.xp}" ${d&&!c?'':'disabled'}>${c?'Claimed':d?'Claim':'In progress'}</button></div><div class="bar"><i style="width:${Math.min(100,q.p/q.g*100)}%"></i></div></div>`}).join('')}`}
+function vData(){return`<h1>Data</h1><div class="p"><p>Your data lives only in this browser’s local storage. It is not encrypted and anyone with access to this device can edit it, so levels and XP are a personal game, not verified results.</p><div class="row"><button id="ex">Export backup</button><label class="chk"><span class="g" style="border:1px solid var(--line);border-radius:10px;padding:10px 14px">Import backup<input type="file" id="im" accept="application/json" style="position:absolute;opacity:0;width:1px"></span></label><button class="g" id="rs">Reset everything</button></div></div>`}
+function vOnb(){return`<h1>Project Sovereign</h1><p class="mut">Evolve beyond your previous limits. Four questions set up your awakening.</p><div class="p"><label for="nm">Nickname</label><input id="nm" maxlength="30" style="width:100%"><label for="ag">Age range</label><select id="ag">${Object.entries(AGES).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select><label for="xp">Training experience</label><select id="xp"><option value="new">New to training</option><option value="some">Some experience</option><option value="regular">Train regularly</option></select><label>Equipment you have</label>${['bar','dumbbell','band','rope','box'].map(x=>`<label class="chk"><input type="checkbox" value="${x}">${x}</label>`).join('')}<label for="dy">Training days per week</label><select id="dy">${[2,3,4,5].map(n=>`<option>${n}</option>`).join('')}</select><label for="mn">Minutes per session</label><select id="mn">${[30,45,60].map(n=>`<option>${n}</option>`).join('')}</select><p class="mut">Nothing here leaves your device. Under-18 profiles are capped at Intermediate with no adult-only movements.</p><button id="aw" style="margin-top:10px">Begin awakening</button></div>`}
+function render(){clearInterval(tm);const a=$('#app'),n=$('#nav');if(!S){n.innerHTML='';a.innerHTML=vOnb();$('#aw').onclick=()=>{const nm=$('#nm').value.trim().replace(/[<>]/g,'');if(!nm)return toast('Enter a nickname first.');S={v:1,name:nm,age:$('#ag').value,exp:$('#xp').value,eq:[...document.querySelectorAll('.chk input:checked')].map(i=>i.value),days:+$('#dy').value,mins:+$('#mn').value,diff:1,plan:[],log:[],claims:[],bonus:0,favs:[]};S.diff=Math.min(2,caps().cap);save();render()};return}
+n.innerHTML=[['status','Status'],['lib','Library'],['train','Train'],['quests','Quests'],['data','Data']].map(([k,v])=>`<button data-v="${k}" ${view===k?'aria-current="page"':''}>${v}${k==='train'&&sess?' ●':''}</button>`).join('');
+a.innerHTML={status:vStatus,lib:vLib,train:vTrain,quests:vQuests,data:vData}[view]();
+n.querySelectorAll('button').forEach(b=>b.onclick=()=>{view=b.dataset.v;render()});
+const on=(s,f)=>{const x=$(s);if(x)x.onclick=f};
+if(view==='lib'){$('#q').oninput=e=>{filt.q=e.target.value.slice(0,60);const p=e.target.selectionStart;render();$('#q').focus();$('#q').setSelectionRange(p,p)};$('#fp').onchange=e=>{filt.p=e.target.value;render()};$('#fe').onchange=e=>{filt.e=e.target.value;render()};a.querySelectorAll('[data-fav]').forEach(b=>b.onclick=()=>{const i=S.favs.indexOf(b.dataset.fav);i<0?S.favs.push(b.dataset.fav):S.favs.splice(i,1);save();render()})}
+if(view==='train'){if(sess){on('#rec',recSet);on('#pz',()=>{sess.pausedAt?(sess.paused+=Date.now()-sess.pausedAt,sess.pausedAt=0):sess.pausedAt=Date.now();saveSess();render()});on('#skip',()=>ask('Skip this exercise? Skipped sets earn no XP.',()=>{sess.steps[sess.i].sets=sess.steps[sess.i].recs.length;sess.i=Math.min(sess.i+1,sess.steps.length-1);saveSess();render()},'Skip'));$('#nt').onchange=e=>{sess.notes=e.target.value.slice(0,200);saveSess()};on('#fin',()=>{const miss=sess.steps.some(s=>s.recs.length<s.sets);miss?ask('Some sets are unrecorded. Finish now and only count recorded sets?',finish,'Finish'):finish()});on('#ab',()=>ask('Abandon this session? Nothing will be awarded.',()=>{sess=null;saveSess();render()},'Abandon'));tm=setInterval(()=>{const c=$('#clk');if(!c)return;c.textContent=fmt(el());const r=sess.rest-Date.now();$('#rst').textContent=r>0?'Rest '+fmt(r):'Ready'},500)}
+else{$('#df').onchange=e=>{const v=+e.target.value;if(v<=caps().cap){S.diff=v;save()}render()};on('#gen',()=>{gen();render()});on('#go',startSess);a.querySelectorAll('[data-sw]').forEach(b=>b.onclick=()=>{const i=+b.dataset.sw,s=S.plan[i],cur=byId[s.ex],alt=sh(D.filter(e=>e.p===cur.p&&e.id!==cur.id&&okEx(e,S.diff)&&!S.plan.some(x=>x.ex===e.id)))[0];if(!alt)return toast('No safe alternative with your equipment.');S.plan[i]={...step(alt,s.role,S.diff)};save();render()})}}
+if(view==='quests')a.querySelectorAll('[data-cl]').forEach(b=>b.onclick=()=>{const k=b.dataset.cl;if(S.claims.includes(k))return;S.claims.push(k);S.bonus+=Math.min(200,+b.dataset.xp||0);save();toast('Quest reward claimed.');render()});
+if(view==='data'){on('#ex',()=>{try{const u=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:'application/json'})),l=document.createElement('a');l.href=u;l.download='sovereign-backup-'+today()+'.json';l.click();setTimeout(()=>URL.revokeObjectURL(u),2e3)}catch(e){toast('Export failed. Try again.')}});$('#im').onchange=e=>{const f=e.target.files[0];if(!f)return;if(f.size>1e6)return toast('That file is over 1 MB, so it was rejected.');const r=new FileReader();r.onload=()=>{try{const o=JSON.parse(r.result);if(!valid(o))throw 0;ask('Replace current progress with this backup?',()=>{S=o;S.plan=[];save();view='status';render();toast('Backup restored.')},'Replace')}catch(x){toast('That file is not a valid Sovereign backup. Nothing was changed.')}};r.onerror=()=>toast('Could not read that file.');r.readAsText(f)};on('#rs',()=>ask('Erase all progress on this device? Export a backup first if unsure.',()=>{S=null;sess=null;try{localStorage.removeItem(K);localStorage.removeItem(K+'.sess')}catch(e){}render()},'Erase'))}}
+window.addEventListener('error',()=>toast('Something went wrong. Your saved progress is untouched.'));
+render();
+</script></body></html>
